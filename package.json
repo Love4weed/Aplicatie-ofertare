@@ -1,0 +1,10 @@
+{
+  "name": "acp-identificare-coduri",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ACP - Identificare coduri produse din solicitari client, cu baza de coduri Priority comuna",
+  "dependencies": {
+    "@vercel/postgres": "^0.10.0",
+    "@anthropic-ai/sdk": "^0.32.1"
+  }
+}

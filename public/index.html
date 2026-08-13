@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACP — Identificare coduri produse</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#0F1B2B;
+    --steel:#33475B;
+    --line:#D7DEE6;
+    --paper:#F6F8FA;
+    --white:#FFFFFF;
+    --accent:#0E7C86;
+    --accent-dark:#0A5D65;
+    --warn:#B4530A;
+    --mono: 'IBM Plex Mono', 'Consolas', monospace;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'IBM Plex Sans', sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 24px 80px;
+  }
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .brand .mark{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:.14em;
+    background:var(--ink);
+    color:var(--white);
+    padding:4px 8px;
+  }
+  h1{
+    font-size:22px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--steel);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .headerRight{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .logoutLink{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--steel);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    padding:0;
+  }
+  .logoutLink:hover{color:var(--ink);}
+  .panel{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:2px;
+  }
+  .panel + .panel{margin-top:20px;}
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .panel-head .step{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--white);
+    background:var(--accent);
+    padding:3px 8px;
+    border-radius:2px;
+    letter-spacing:.06em;
+  }
+  .panel-head h2{
+    font-size:14px;
+    margin:0;
+    font-weight:600;
+    flex:1;
+    margin-left:10px;
+  }
+  .panel-body{padding:18px;}
+
+  textarea{
+    width:100%;
+    min-height:160px;
+    resize:vertical;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:12px 14px;
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.55;
+    color:var(--ink);
+    background:var(--paper);
+  }
+  textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  textarea::placeholder{color:#8695A6;}
+
+  .row-actions{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  button{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid transparent;
+    padding:10px 18px;
+    transition:background .12s ease, transform .05s ease;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{
+    background:var(--ink);
+    color:var(--white);
+  }
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-primary:disabled{background:#9AA7B3; cursor:not-allowed;}
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .btn-ghost:hover{border-color:var(--ink);}
+
+  .hint{
+    font-size:12px;
+    color:var(--steel);
+  }
+
+  .status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent-dark);
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent);
+    animation:pulse 1s infinite ease-in-out;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  thead th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--white);
+    background:var(--ink);
+    padding:10px 10px;
+    position:sticky;
+    top:0;
+  }
+  tbody td{
+    padding:0;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody td[contenteditable="true"]{
+    padding:9px 10px;
+    outline:none;
+  }
+  tbody td[contenteditable="true"]:focus{
+    background:#EAF6F7;
+    box-shadow:inset 0 0 0 1.5px var(--accent);
+  }
+  tbody tr:nth-child(even) td{background:#FBFCFD;}
+  .col-cod{font-family:var(--mono); font-weight:600; white-space:nowrap;}
+  .col-num{text-align:right; font-family:var(--mono);}
+  .flag-row td{background:#FFF6E9 !important;}
+  .flag-badge{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--warn);
+    border:1px solid var(--warn);
+    padding:1px 5px;
+    border-radius:2px;
+    margin-right:6px;
+    white-space:nowrap;
+  }
+  .table-scroll{
+    max-height:520px;
+    overflow:auto;
+    border-top:1px solid var(--line);
+  }
+  .empty{
+    padding:40px 18px;
+    text-align:center;
+    color:var(--steel);
+    font-size:13px;
+  }
+  .empty .big{
+    font-family:var(--mono);
+    font-size:28px;
+    color:var(--line);
+    margin-bottom:8px;
+  }
+  footer.legend{
+    display:flex;
+    gap:18px;
+    padding:12px 18px;
+    border-top:1px solid var(--line);
+    font-size:11.5px;
+    color:var(--steel);
+    flex-wrap:wrap;
+  }
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  .err-box{
+    background:#FCEBEA;
+    border:1px solid #E39A94;
+    color:#7A231B;
+    padding:12px 14px;
+    border-radius:2px;
+    font-size:13px;
+    margin-top:14px;
+  }
+
+  /* Overlay autentificare */
+  #authOverlay{
+    position:fixed;
+    inset:0;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+  }
+  .authBox{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:28px 30px;
+    width:100%;
+    max-width:340px;
+  }
+  .authBox h1{font-size:16px; margin:0 0 4px;}
+  .authBox .sub{margin-bottom:18px; display:block;}
+  .authBox input[type="password"]{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:10px 12px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    margin-bottom:12px;
+  }
+  .authBox input[type="password"]:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .authBox button{width:100%;}
+  .authBox .authError{
+    color:#7A231B;
+    font-size:12.5px;
+    margin-bottom:10px;
+    display:none;
+  }
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+
+<div id="authOverlay">
+  <div class="authBox">
+    <div class="brand" style="margin-bottom:14px;">
+      <span class="mark">ACP</span>
+    </div>
+    <h1>Acces aplicație</h1>
+    <span class="sub">Introdu parola partajată pentru identificare coduri</span>
+    <div class="authError" id="authError">Parolă incorectă.</div>
+    <form id="authForm">
+      <input type="password" id="authPassword" placeholder="Parolă" autocomplete="current-password" required>
+      <button type="submit" class="btn-primary" id="authSubmit">Intră</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap" id="appRoot" hidden>
+
+  <header>
+    <div class="brand">
+      <span class="mark">ACP</span>
+      <div>
+        <h1>Identificare coduri produse</h1>
+        <div class="sub">Din cererea clientului → cod, cantitate, culoare</div>
+      </div>
+    </div>
+    <div class="headerRight">
+      <div class="sub" id="catalogInfo">Catalog: — coduri încărcate</div>
+      <button class="logoutLink" id="logoutBtn">Deconectare</button>
+    </div>
+  </header>
+
+  <div class="panel" id="dbPanel">
+    <div class="panel-head">
+      <span class="step">00</span>
+      <h2>Baza de coduri reale Priority</h2>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-ghost" id="dbUploadBtn">Încarcă / actualizează baza</button>
+        <input type="file" id="dbFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+    </div>
+    <div class="panel-body">
+      <div id="dbStatus" class="hint">Nicio bază de coduri încărcată încă — codurile vor fi doar generate după reguli, nu verificate. Încarcă fișierul <code>Articole_ACP_identificate_curat.xlsx</code> (foaia "Articole identificate") o singură dată — rămâne salvată pentru toți colegii.</div>
+      <div id="dbUploadStatus" style="display:none; margin-top:10px;" class="row-actions">
+        <span class="status"><span class="dot"></span> Se procesează baza de date...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="step">01</span>
+      <h2>Lipește solicitarea clientului</h2>
+    </div>
+    <div class="panel-body">
+      <textarea id="clientInput" placeholder="Ex:
+- 4 buc grila dubla deflexie 300x300, RAL9010
+- Anemostat circular D200, 2 bucati, alb
+- Difuzor liniar fanta 25mm, 1200mm lungime, negru eloxat, 6 buc"></textarea>
+      <div class="row-actions">
+        <button class="btn-primary" id="processBtn">Identifică produsele</button>
+        <button class="btn-ghost" id="uploadBtn">Încarcă Excel/CSV</button>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+        <button class="btn-ghost" id="clearBtn">Golește</button>
+        <span class="hint">Poți lipi text liber, email, sau liste — sau încarcă direct un fișier Excel/CSV cu necesarul.</span>
+      </div>
+      <div id="uploadStatus" style="display:none;" class="row-actions">
+        <span class="status"><span class="dot"></span> Se citește fișierul...</span>
+      </div>
+      <div id="statusRow" style="display:none;" class="row-actions">
+        <span class="status"><span class="dot"></span> Se identifică produsele în catalog...</span>
+      </div>
+      <div id="errorBox"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="step">02</span>
+      <h2>Rezultat</h2>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-ghost" id="copyBtn" style="display:none;">Copiază tabelul</button>
+        <button class="btn-primary" id="exportBtn" style="display:none;">Exportă Excel</button>
+      </div>
+    </div>
+    <div class="table-scroll" id="tableScroll">
+      <div class="empty" id="emptyState">
+        <div class="big">···</div>
+        Rezultatele apar aici după ce procesezi o solicitare.
+      </div>
+    </div>
+    <footer class="legend" id="legendRow" style="display:none;">
+      <span><span class="swatch" style="background:#FFF6E9;border:1px solid #B4530A;"></span> rând marcat = verifică manual (cod nesigur / informație lipsă)</span>
+      <span>Celulele sunt editabile — poți corija direct în tabel înainte de export.</span>
+    </footer>
+  </div>
+
+</div>
+
+<script>
+// =========================================================
+// AUTENTIFICARE — parolă comună, sesiune pe cookie semnat server-side
+// =========================================================
+const authOverlay = document.getElementById('authOverlay');
+const authForm = document.getElementById('authForm');
+const authPassword = document.getElementById('authPassword');
+const authError = document.getElementById('authError');
+const authSubmit = document.getElementById('authSubmit');
+const appRoot = document.getElementById('appRoot');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function showApp() {
+  authOverlay.hidden = true;
+  appRoot.hidden = false;
+  initAppOnce();
+}
+
+function showAuthOverlay() {
+  appRoot.hidden = true;
+  authOverlay.hidden = false;
+  authPassword.value = '';
+  authPassword.focus();
+}
+
+async function checkSession() {
+  try {
+    const res = await fetch('/api/session');
+    const data = await res.json();
+    if (data.authenticated) {
+      showApp();
+    } else {
+      showAuthOverlay();
+    }
+  } catch (e) {
+    showAuthOverlay();
+  }
+}
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  authError.style.display = 'none';
+  authSubmit.disabled = true;
+  authSubmit.textContent = 'Se verifică...';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: authPassword.value })
+    });
+    if (res.ok) {
+      showApp();
+    } else {
+      authError.style.display = 'block';
+    }
+  } catch (err) {
+    authError.textContent = 'Eroare de rețea, încearcă din nou.';
+    authError.style.display = 'block';
+  } finally {
+    authSubmit.disabled = false;
+    authSubmit.textContent = 'Intră';
+  }
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  showAuthOverlay();
+});
+
+// Orice apel /api/* care intoarce 401 (sesiune expirata) re-arata overlay-ul de login.
+async function apiFetch(url, options) {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    showAuthOverlay();
+  }
+  return res;
+}
+
+checkSession();
+
+// =========================================================
+// APLICAȚIA — inițializată o singură dată, după autentificare
+// =========================================================
+let appInitialized = false;
+
+function initAppOnce() {
+  if (appInitialized) return;
+  appInitialized = true;
+  initApp();
+}
+
+function initApp() {
+
+const clientInput = document.getElementById('clientInput');
+const dbUploadBtn = document.getElementById('dbUploadBtn');
+const dbFileInput = document.getElementById('dbFileInput');
+const dbStatus = document.getElementById('dbStatus');
+const dbUploadStatus = document.getElementById('dbUploadStatus');
+const uploadBtn = document.getElementById('uploadBtn');
+const fileInput = document.getElementById('fileInput');
+const uploadStatus = document.getElementById('uploadStatus');
+const processBtn = document.getElementById('processBtn');
+const clearBtn = document.getElementById('clearBtn');
+const statusRow = document.getElementById('statusRow');
+const errorBox = document.getElementById('errorBox');
+const tableScroll = document.getElementById('tableScroll');
+const emptyState = document.getElementById('emptyState');
+const exportBtn = document.getElementById('exportBtn');
+const copyBtn = document.getElementById('copyBtn');
+const legendRow = document.getElementById('legendRow');
+const catalogInfo = document.getElementById('catalogInfo');
+
+let currentRows = [];
+
+catalogInfo.textContent = 'Catalog tehnic ACP + convenții Priority · server-side';
+
+clearBtn.addEventListener('click', () => {
+  clientInput.value = '';
+  clientInput.focus();
+});
+
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  uploadStatus.style.display = 'flex';
+  errorBox.innerHTML = '';
+
+  try {
+    let rows;
+    if (file.name.toLowerCase().endsWith('.csv')) {
+      const text = await file.text();
+      const parsed = XLSX.read(text, { type: 'string' });
+      const sheet = parsed.Sheets[parsed.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    } else {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    }
+
+    if (!rows.length) {
+      errorBox.innerHTML = '<div class="err-box">Fișierul pare gol sau nu a putut fi citit.</div>';
+      return;
+    }
+
+    // Detecteaza randul de antet (cauta cuvinte cheie uzuale) ca sa-l putem ignora la construirea textului
+    const headerKeywords = ['denumire', 'descriere', 'produs', 'cantitate', 'cant', 'um', 'nr', 'buc'];
+    let headerRowIndex = -1;
+    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+      const rowText = rows[i].join(' ').toLowerCase();
+      if (headerKeywords.some(k => rowText.includes(k))) {
+        headerRowIndex = i;
+        break;
+      }
+    }
+
+    const lines = [];
+    for (let i = 0; i < rows.length; i++) {
+      if (i === headerRowIndex) continue;
+      const row = rows[i].map(c => String(c ?? '').trim()).filter(Boolean);
+      if (!row.length) continue;
+      lines.push(row.join(' | '));
+    }
+
+    if (!lines.length) {
+      errorBox.innerHTML = '<div class="err-box">Nu am găsit rânduri cu date în fișier.</div>';
+      return;
+    }
+
+    clientInput.value = lines.join('\n');
+    clientInput.scrollTop = 0;
+
+  } catch (err) {
+    console.error(err);
+    errorBox.innerHTML = `<div class="err-box">Nu am putut citi fișierul: ${err.message}. Verifică formatul (.xlsx, .xls sau .csv).</div>`;
+  } finally {
+    uploadStatus.style.display = 'none';
+    fileInput.value = '';
+  }
+});
+
+// =========================================================
+// BAZA DE CODURI REALE PRIORITY - stocare Postgres comuna + verificare
+// =========================================================
+
+// Familiile din catalogul ACP, sortate descrescator dupa lungime, pentru extragerea familiei
+// dintr-un cod generat de AI (acelasi principiu ca la potrivirea server-side facuta la construirea bazei)
+const FAMILY_LIST = ["WPL-S-T","RCD-H-R","CD-2-90","EGD-45","LENOXV-F25","LENOXV-F38","LENOXV-F51","LENOXV-F64","LENOX-ANGLE-135","LENOX-ANGLE-90","LENOX-ANGLE","LENOX-F25","LENOX-F38","LENOX-F51","LENOX-F64","SLOT19-ANGLE135","SLOT25-ANGLE135","SLOT19-ANGLE90","SLOT25-ANGLE90","SL19-ANGLE90-EL","SL19-ANGLE90-LT","SL25-ANGLE90-EL","SL19-ANGLE90","SL25-ANGLE90","WPL-S","WPL-R","WPL-T","RCD-H","EGD-0","DD-T","DD-1","SD-D","SD-T","PF-D","PF-F","RP-R","TG-S","RD-G","RD-S","RS-G","CD-4","CD-3","CD-2","CD-1","ST-1","SW-R","LENOX","LINES","CRACK","HELIO","WAVE","WING","DOTS","ECHO","LBD","SL19","SL25","VCD-S","F-R","FL-R","EG-0","EG-45","RA-1","VSR","NRD","OBD","TF-N","TF-IZ","VCD","AD","AG","CC","DD","EV","SV","FL","JD","LB","PF","RA","RP","SD","ST","TG","VS","WPL","F"];
+FAMILY_LIST.sort((a,b) => b.length - a.length);
+
+let dbData = null; // Map<familie, Array<{cod, nums:number[]}>>
+let dbRawCount = 0;
+
+function extractNums(s) {
+  const m = String(s).match(/\d+/g);
+  return m ? m.map(Number) : [];
+}
+
+function guessFamily(codUpper) {
+  for (const fam of FAMILY_LIST) {
+    if (codUpper.startsWith(fam)) {
+      const rest = codUpper.slice(fam.length);
+      if (rest === '' || rest[0] === '-' || /[0-9]/.test(rest[0])) {
+        return fam;
+      }
+    }
+  }
+  return null;
+}
+
+function buildDbData(pairs) {
+  // pairs: [[familie, cod], ...]
+  const map = new Map();
+  for (const [fam, cod] of pairs) {
+    if (!map.has(fam)) map.set(fam, []);
+    map.get(fam).push({ cod, nums: extractNums(cod) });
+  }
+  return map;
+}
+
+async function loadDbFromServer() {
+  try {
+    const res = await apiFetch('/api/db');
+    if (!res.ok) return;
+    const data = await res.json();
+    const pairs = data.pairs || [];
+    if (pairs.length) {
+      dbData = buildDbData(pairs);
+      dbRawCount = pairs.length;
+      dbStatus.innerHTML = `<strong>${dbRawCount.toLocaleString('ro-RO')}</strong> coduri reale Priority încărcate — comune pentru toți colegii — codurile identificate vor fi verificate automat.`;
+    }
+  } catch (e) {
+    // nimic salvat inca sau eroare de retea, e ok
+  }
+}
+
+dbUploadBtn.addEventListener('click', () => dbFileInput.click());
+
+dbFileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  dbUploadStatus.style.display = 'flex';
+  try {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    let sheet = workbook.Sheets['Articole identificate'] || workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+    // Detecteaza coloanele: cautam antetul cu "Familie" si "Cod Articol"
+    let headerIdx = 0;
+    let famCol = 0, codCol = 3;
+    for (let i = 0; i < Math.min(rows.length, 3); i++) {
+      const rowText = rows[i].map(c => String(c).toLowerCase());
+      const fIdx = rowText.findIndex(c => c.includes('familie') && c.includes('acp'));
+      const cIdx = rowText.findIndex(c => c.includes('cod') && c.includes('articol'));
+      if (fIdx !== -1 && cIdx !== -1) {
+        headerIdx = i; famCol = fIdx; codCol = cIdx;
+        break;
+      }
+    }
+
+    const pairs = [];
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      const fam = String(row[famCol] || '').trim();
+      const cod = String(row[codCol] || '').trim();
+      if (fam && cod && fam !== 'TOTAL') pairs.push([fam, cod]);
+    }
+
+    if (!pairs.length) {
+      dbStatus.innerHTML = '<span style="color:#B4530A;">Nu am găsit coloanele "Familie (catalog ACP)" și "Cod Articol" în fișier. Verifică foaia "Articole identificate".</span>';
+      return;
+    }
+
+    const res = await apiFetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pairs })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      dbStatus.innerHTML = `<span style="color:#B4530A;">Eroare la salvare: ${err.error || res.status}</span>`;
+      return;
+    }
+
+    dbData = buildDbData(pairs);
+    dbRawCount = pairs.length;
+    dbStatus.innerHTML = `<strong>${dbRawCount.toLocaleString('ro-RO')}</strong> coduri reale Priority încărcate și salvate — comune pentru toți colegii, rămân disponibile și data viitoare.`;
+
+  } catch (err) {
+    console.error(err);
+    dbStatus.innerHTML = `<span style="color:#B4530A;">Eroare la citirea fișierului: ${err.message}</span>`;
+  } finally {
+    dbUploadStatus.style.display = 'none';
+    dbFileInput.value = '';
+  }
+});
+
+// Verifica/corecteaza fiecare produs identificat de AI fata de baza reala de coduri
+function verifyAgainstDb(produse) {
+  if (!dbData) return produse;
+  for (const p of produse) {
+    if (!p.cod) continue;
+    const codUpper = String(p.cod).toUpperCase().replace(/\s+/g, '');
+    const fam = guessFamily(codUpper);
+    if (!fam || !dbData.has(fam)) {
+      continue; // familie neacoperita de baza incarcata - lasam codul generat de AI neschimbat
+    }
+    const candidates = dbData.get(fam);
+    const targetNums = extractNums(codUpper);
+
+    // Cauta potrivire exacta (acelasi cod, indiferent de separatori) sau cea mai apropiata numeric
+    let best = null, bestDist = Infinity;
+    const codNoSep = codUpper.replace(/[^A-Z0-9]/g, '');
+    for (const c of candidates) {
+      const cNoSep = String(c.cod).toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (cNoSep === codNoSep) { best = c; bestDist = 0; break; }
+      let dist;
+      if (c.nums.length === targetNums.length && c.nums.length > 0) {
+        dist = c.nums.reduce((sum, n, i) => sum + Math.abs(n - targetNums[i]), 0);
+      } else {
+        dist = 1e9 + Math.abs(c.nums.length - targetNums.length) * 1e6;
+      }
+      if (dist < bestDist) { bestDist = dist; best = c; }
+    }
+
+    if (best && bestDist === 0) {
+      p.cod = best.cod; // cod real confirmat, exact
+    } else if (best && bestDist < 1e6) {
+      const cerut = p.cod;
+      p.cod = best.cod;
+      p.incert = true;
+      p.observatii = `Cerut: ${cerut} - dimensiune exacta indisponibila in Priority, cel mai apropiat cod real existent: ${best.cod}. ${p.observatii || ''}`.trim();
+    } else {
+      p.observatii = `Familia ${fam} exista in baza de coduri dar nicio dimensiune apropiata gasita. ${p.observatii || ''}`.trim();
+      p.incert = true;
+    }
+  }
+  return produse;
+}
+
+loadDbFromServer();
+
+processBtn.addEventListener('click', async () => {
+  const text = clientInput.value.trim();
+  errorBox.innerHTML = '';
+  if (!text) {
+    errorBox.innerHTML = '<div class="err-box">Lipește mai întâi solicitarea clientului în câmpul de mai sus.</div>';
+    return;
+  }
+
+  processBtn.disabled = true;
+
+  const batches = splitIntoBatches(text, 2200);
+  let allProduse = [];
+
+  try {
+    for (let i = 0; i < batches.length; i++) {
+      statusRow.style.display = 'flex';
+      statusRow.querySelector('.status').innerHTML =
+        `<span class="dot"></span> Se identifică produsele${batches.length > 1 ? ` (lot ${i + 1}/${batches.length})` : ''}...`;
+
+      const produse = await identifyBatch(batches[i]);
+      allProduse = allProduse.concat(produse);
+    }
+
+    if (!allProduse.length) {
+      errorBox.innerHTML = '<div class="err-box">Nu am putut identifica niciun produs in textul introdus. Incearca sa fii mai specific sau verifica formatul.</div>';
+      renderTable([]);
+      return;
+    }
+
+    allProduse = verifyAgainstDb(allProduse);
+
+    currentRows = allProduse;
+    renderTable(allProduse);
+
+  } catch (err) {
+    console.error(err);
+    errorBox.innerHTML = `<div class="err-box">A aparut o eroare la procesare: ${err.message}. Daca lista e foarte lunga, incearca sa o imparti in doua solicitari mai mici, sau apasa din nou.</div>`;
+    if (allProduse.length) {
+      currentRows = allProduse;
+      renderTable(allProduse);
+    }
+  } finally {
+    processBtn.disabled = false;
+    statusRow.style.display = 'none';
+  }
+});
+
+function splitIntoBatches(text, maxChars) {
+  if (text.length <= maxChars) return [text];
+  const lines = text.split('\n');
+  const batches = [];
+  let current = '';
+  for (const line of lines) {
+    if (current.length + line.length + 1 > maxChars && current.length > 0) {
+      batches.push(current);
+      current = line;
+    } else {
+      current = current ? current + '\n' + line : line;
+    }
+  }
+  if (current) batches.push(current);
+  return batches;
+}
+
+async function identifyBatch(batchText) {
+  const response = await apiFetch('/api/identify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: batchText })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `Eroare API (status ${response.status})`);
+  }
+
+  const data = await response.json();
+  return data.produse || [];
+}
+
+function renderTable(rows) {
+  if (!rows.length) {
+    tableScroll.innerHTML = '';
+    tableScroll.appendChild(emptyState);
+    exportBtn.style.display = 'none';
+    copyBtn.style.display = 'none';
+    legendRow.style.display = 'none';
+    return;
+  }
+
+  exportBtn.style.display = 'inline-block';
+  copyBtn.style.display = 'inline-block';
+  legendRow.style.display = 'flex';
+
+  let html = `<table id="resultTable">
+    <thead>
+      <tr>
+        <th style="width:170px;">Cod Articol</th>
+        <th style="width:90px;">Cantitate</th>
+        <th style="width:110px;">Cod vopsea</th>
+        <th>Descriere</th>
+        <th>Observații</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  rows.forEach((r) => {
+    const flagged = r.incert ? 'flag-row' : '';
+    const badge = r.incert ? '<span class="flag-badge">verifică</span>' : '';
+    html += `<tr class="${flagged}">
+      <td class="col-cod" contenteditable="true">${escapeHtml(r.cod || '')}</td>
+      <td class="col-num" contenteditable="true">${escapeHtml(r.cantitate || '')}</td>
+      <td contenteditable="true">${escapeHtml(r.culoare || '')}</td>
+      <td contenteditable="true">${escapeHtml(r.descriere || '')}</td>
+      <td contenteditable="true">${badge}${escapeHtml(r.observatii || '')}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  tableScroll.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+function readTableFromDOM() {
+  const table = document.getElementById('resultTable');
+  if (!table) return [];
+  const rows = [];
+  table.querySelectorAll('tbody tr').forEach(tr => {
+    const cells = tr.querySelectorAll('td');
+    rows.push({
+      cod: cells[0].innerText.trim(),
+      cantitate: cells[1].innerText.trim(),
+      culoare: cells[2].innerText.trim(),
+      descriere: cells[3].innerText.trim(),
+      observatii: cells[4].innerText.replace('verifică', '').trim()
+    });
+  });
+  return rows;
+}
+
+exportBtn.addEventListener('click', () => {
+  const rows = readTableFromDOM();
+  if (!rows.length) return;
+
+  const wsData = [
+    ['Cod Articol', 'Cantitate', 'Cod vopsea', 'Descriere', 'Observatii'],
+    ...rows.map(r => [r.cod, r.cantitate, r.culoare, r.descriere, r.observatii])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:22},{wch:10},{wch:14},{wch:40},{wch:36}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Produse identificate");
+  const stamp = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Produse_identificate_${stamp}.xlsx`);
+});
+
+copyBtn.addEventListener('click', () => {
+  const rows = readTableFromDOM();
+  if (!rows.length) return;
+  const header = ['Cod Articol','Cantitate','Cod vopsea','Descriere','Observatii'].join('\t');
+  const lines = rows.map(r => [r.cod, r.cantitate, r.culoare, r.descriere, r.observatii].join('\t'));
+  const tsv = [header, ...lines].join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    const original = copyBtn.textContent;
+    copyBtn.textContent = 'Copiat ✓';
+    setTimeout(() => { copyBtn.textContent = original; }, 1500);
+  });
+});
+
+} // sfarsit initApp
+</script>
+</body>
+</html>
