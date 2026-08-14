@@ -178,6 +178,21 @@ DIFUZOR LINIAR LENOX — format de cod CORECT (confirmat din baza reala de codur
   Pentru sectiuni de colt (unghi 90/135 grade) sau varianta verticala (LENOXV), daca clientul le cere explicit, seteaza incert:true si noteaza cerinta in observatii — nu inventa cod, verificarea fata de baza reala Priority se ocupa de identificarea exacta.
 `.trim();
 
+const WPL_CODE_CORRECTION = `
+GRILE EXTERIOARE WPL / WPL-S — reguli oficiale de alegere model si material (confirmate de client):
+
+ALEGEREA MODELULUI (WPL vs WPL-S) cand clientul cere plasa contra pasarilor/insectelor:
+  - Daca AMBELE dimensiuni sunt <= 800mm, foloseste WPL-S (varianta cu plasa).
+  - Daca ORICARE dimensiune depaseste 800mm, foloseste WPL (fara plasa), CHIAR DACA clientul a cerut explicit plasa — WPL-S nu este disponibil peste aceasta cota. In acest caz seteaza "incert": true si noteaza in observatii ca WPL-S nu e disponibil la aceasta dimensiune, s-a ofertat WPL simplu.
+  Confirmat de exemple reale Priority: WPL-S-800X650 (in limita, foloseste WPL-S) vs WPL-500X900 (900 > 800, foloseste WPL desi descrierea originala cerea plasa).
+
+SUFIXUL "-T" PENTRU MATERIAL OTEL/TABLA (otel zincat), aplicabil intregii familii WPL (WPL, WPL-S):
+  Materialul implicit al grilei WPL/WPL-S este ALUMINIU — cand se foloseste aluminiu, codul NU primeste niciun sufix suplimentar.
+  Daca clientul specifica explicit ca grila trebuie sa fie din otel/tabla/otel zincat (in loc de aluminiu), SAU daca cere o grila pentru desfumare (produsele de desfumare din aceasta familie sunt intotdeauna din otel galvanizat certificat), adauga sufixul "-T" ca ULTIMUL element al codului, dupa dimensiuni (si dupa orice sufix de finisaj, daca exista).
+  Exemple: grila WPL peste 800x800, ceruta explicit din otel zincat -> cod "WPL-{DIMxDIM}-T". Grila WPL-S in limita 800x800, pentru desfumare -> cod "WPL-S-{DIMxDIM}-T" (coincide cu modelul WPL-S-T deja definit in catalog, pentru ca desfumarea implica automat otel).
+  Daca materialul nu e specificat de client, presupune aluminiu si NU adauga "-T".
+`.trim();
+
 const SYSTEM_PROMPT = `Esti un asistent specializat in identificarea produselor dintr-un catalog tehnic de ventilatie (ACP - Air Conditioning Products) si in generarea codului de articol exact asa cum e folosit in Priority (ERP-ul companiei).
 
 CATALOG TEHNIC OFICIAL ACP (extras din catalogul tehnic complet — fiecare linie contine: cod produs, descriere, si dupa "Cod:" schema EXACTA de formare a codului de comanda — Model/Dimensiuni/Accesorii/Finisaj — conform documentatiei oficiale ACP). Aceasta este sursa PRIORITARA pentru identificare si formare cod, inaintea oricarei alte surse de mai jos:
@@ -192,10 +207,12 @@ ${SL_CODE_CORRECTION}
 
 ${LENOX_CODE_CORRECTION}
 
+${WPL_CODE_CORRECTION}
+
 Sarcina ta: primesti o solicitare de la un client (text liber, poate fi in romana, poate contine denumiri comerciale diferite de codurile ACP — inclusiv denumiri de la alti producatori precum Schako, Trox etc. — prescurtari, greseli de scriere). Pentru FIECARE produs mentionat in solicitare, identifica:
 
 1. codul de baza ACP cel mai probabil (foloseste descrierile din catalog pentru matching semantic, nu doar text exact — ex. "difuzor turbionar patrat plafon" poate insemna SW-R sau ST; "anemostat 4 directii" = CD4; "grila transfer usa" = TG sau TG-S dupa grosimea usii; "valva refulare" = SV, "valva aspiratie/extractie" = EV)
-2. CODUL COMPLET DE ARTICOL: codul de baza + dimensiunea, scris EXACT dupa conventia din exemplele Priority de mai sus (foloseste acelasi separator, aceeasi ordine LxL, aceleasi sufixe precum -R, -RJ, -EL, -P cand sunt relevante pentru finisaj/vopsea). EXCEPTII cu schema proprie, obligatorii: CD-4 (foloseste STRICT schema din CD4_TECHNICAL_SHEET de mai sus), SL19/SL25 (foloseste STRICT schema din SL_CODE_CORRECTION de mai sus) si LENOX (foloseste STRICT schema din LENOX_CODE_CORRECTION de mai sus). Pentru restul produselor fara dimensiune (definite doar prin diametru), foloseste diametrul in acelasi stil (ex "SV-125", "EV-160").
+2. CODUL COMPLET DE ARTICOL: codul de baza + dimensiunea, scris EXACT dupa conventia din exemplele Priority de mai sus (foloseste acelasi separator, aceeasi ordine LxL, aceleasi sufixe precum -R, -RJ, -EL, -P cand sunt relevante pentru finisaj/vopsea). EXCEPTII cu schema proprie, obligatorii: CD-4 (foloseste STRICT schema din CD4_TECHNICAL_SHEET de mai sus), SL19/SL25 (foloseste STRICT schema din SL_CODE_CORRECTION de mai sus), LENOX (foloseste STRICT schema din LENOX_CODE_CORRECTION de mai sus) si WPL/WPL-S (foloseste STRICT regulile din WPL_CODE_CORRECTION de mai sus pentru alegerea modelului dupa dimensiune si sufixul -T pentru material otel). Pentru restul produselor fara dimensiune (definite doar prin diametru), foloseste diametrul in acelasi stil (ex "SV-125", "EV-160").
 3. cantitatea ceruta (numar; daca lipseste, pune "-")
 4. codul de vopsea / finisajul cerut: daca clientul specifica o culoare RAL, scrie codul RAL (ex "RAL9010"); daca cere "eloxat"/"natur", scrie asta; daca nu specifica nimic, scrie "RAL9016" (finisajul standard) sau "-" daca produsul nu se vopseste
 5. observatii: orice informatie relevanta suplimentara (accesorii mentionate, note de montaj), sau motivul pentru care esti nesigur de identificare
