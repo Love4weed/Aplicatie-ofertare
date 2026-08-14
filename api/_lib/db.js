@@ -1,21 +1,29 @@
-const { sql, db } = require('@vercel/postgres');
+const { createPool } = require('@vercel/postgres');
+
+// Integrarile de Postgres pe Vercel nu folosesc mereu acelasi nume de variabila
+// (integrarea Neon mai noua seteaza DATABASE_URL / POSTGRES_URL_NON_POOLING, nu POSTGRES_URL) -
+// cautam string-ul de conexiune in orice varianta e disponibila, in loc sa depindem de una fixa.
+const connectionString =
+  process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING;
+
+const pool = createPool({ connectionString });
 
 async function ensureSchema() {
-  await sql`
+  await pool.sql`
     CREATE TABLE IF NOT EXISTS priority_codes (
       id SERIAL PRIMARY KEY,
       familie TEXT NOT NULL,
       cod TEXT NOT NULL
     )
   `;
-  await sql`
+  await pool.sql`
     CREATE INDEX IF NOT EXISTS idx_priority_codes_familie ON priority_codes(familie)
   `;
 }
 
 async function getPairs() {
   await ensureSchema();
-  const { rows } = await sql`SELECT familie, cod FROM priority_codes ORDER BY id`;
+  const { rows } = await pool.sql`SELECT familie, cod FROM priority_codes ORDER BY id`;
   return rows.map((r) => [r.familie, r.cod]);
 }
 
@@ -25,7 +33,7 @@ async function replacePairs(pairs) {
   const familii = pairs.map((p) => String(p[0]));
   const coduri = pairs.map((p) => String(p[1]));
 
-  const client = await db.connect();
+  const client = await pool.connect();
   try {
     await client.sql`BEGIN`;
     await client.sql`DELETE FROM priority_codes`;
