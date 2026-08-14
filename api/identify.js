@@ -33,7 +33,9 @@ module.exports = async (req, res) => {
     const msg = await anthropic.messages.create({
       model: 'claude-sonnet-5',
       max_tokens: 8192,
-      system: SYSTEM_PROMPT,
+      // System prompt-ul (catalog + reguli) e static si mare - il cachem ca sa nu-l platim
+      // integral la fiecare apel (doar ~10% din pret la reutilizare in fereastra de 5 min).
+      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: `Solicitarea clientului:\n\n${text}` }],
     });
 
