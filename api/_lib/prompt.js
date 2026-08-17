@@ -99,41 +99,32 @@ WPLR-315-A | GRILA DE EXTERIOR CU PLASA DE SARMA D=315 -A
 const CD4_TECHNICAL_SHEET = `
 ANEMOSTAT CD-4 — fisa tehnica oficiala ACP:
 Anemostat patrat cu lamele pozitionate in 4 directii, aluminiu, RAL9016 alb lucios standard (alte culori RAL la cerere).
-Exista 2 variante de rama:
 
-1) RAMA INGUSTA — perechi Int/Ext (dimensiunea de comanda e eticheta "Int/Ext"):
-   150/290  (Lint x Hint 145x145, Lext x Hext 295x295)
-   225/370  (Lint x Hint 220x220, Lext x Hext 370x370)
-   300/445  (Lint x Hint 295x295, Lext x Hext 445x445)
-   375/520  (Lint x Hint 370x370, Lext x Hext 520x520)
-   445/595  (Lint x Hint 445x445, Lext x Hext 595x595)
+COD DE COMANDA — structura oficiala confirmata de client, campurile se leaga cu "-":
+  Model:      CD4  (FARA cratima intre CD si 4)
+  Miez:       segment numeric separat (dimensiunea interioara/miezul anemostatului)
+  Dimensiuni: eticheta Int/Ext (ex "445/595")
+  Finisaj:    cod scurt "RJ{ultimele 2 cifre din codul RAL}" — ex RAL9016 -> RJ16, RAL9010 -> RJ10. Implicit (daca nu se cere alta culoare): RJ16.
+  Structura completa: CD4-{miez}-{Int/Ext}-RJ{cifre}
 
-2) RAMA LATA — perechi Int/Ext (toate au Ext fix 595x595, potrivite pentru casetare in tavan fals standard):
-   150/595  (Lint x Hint 145x145)
-   225/595  (Lint x Hint 223x223)
-   300/595  (Lint x Hint 295x295)
-   375/595  (Lint x Hint 370x370)
+COTA MAXIMA: dimensiunea exterioara (Ext) pentru CD-4 este STRICT MAXIM 595mm — nu exista nicio varianta CD-4 cu exterior mai mare de 595. Daca clientul cere/subintelege o dimensiune exterioara mai mare de 595 (ex. 735, 800 etc.), NU inventa o pereche care nu exista. Seteaza "incert": true si noteaza in observatii ca dimensiunea ceruta depaseste cota maxima CD-4 (595 exterior) — nu genera un cod cu exteriorul peste 595 sub nicio forma.
 
-Regula de alegere: daca clientul cere/ subintelege montaj in tavan casetat standard 600x600 (placi de 595x595mm), foloseste RAMA LATA (ext fix 595/595) cu Int cel mai apropiat de dimensiunea ceruta. Daca clientul da o dimensiune exterioara mica/nestandard sau mentioneaza tavan continuu (nu casetat), foloseste RAMA INGUSTA cu perechea Int/Ext cea mai apropiata.
+CAZ IMPLICIT — anemostat CD-4 patrat pentru tavan casetat (600x600) FARA racord/miez specificat exact de client (client da doar o dimensiune aproximativa, ex "anemostat 300x300", sau doar mentioneaza "casetat" fara alte detalii): ofertati IMPLICIT varianta cu miezul cel mai mare disponibil, cod EXACT:
+  CD4-145-445/595-RJ16
+(sau cu alt sufix RJ daca clientul cere explicit alta culoare RAL, pastrand restul codului identic: CD4-145-445/595-RJ{cifre})
 
-COTA MAXIMA: dimensiunea exterioara (Lext x Hext) pentru CD-4 este STRICT MAXIM 595x595mm — nu exista nicio varianta CD-4 cu exterior mai mare de 595. Daca clientul cere/subintelege o dimensiune exterioara mai mare de 595 (ex. 735, 800 etc.), NU inventa o pereche Int/Ext care nu exista in tabelele de mai sus. Foloseste cea mai apropiata pereche valida cu Ext 595x595 (ultima linie din RAMA INGUSTA, "445/595", sau perechea RAMA LATA cea mai apropiata ca Int), seteaza "incert": true si noteaza in observatii ca dimensiunea ceruta depaseste cota maxima CD-4 (595 exterior) si s-a ofertat cea mai apropiata varianta disponibila.
+ALTE DIMENSIUNI CD-4 (client specifica explicit un miez/racord diferit de cazul de mai sus): genereaza cel mai bun cod posibil dupa structura CD4-{miez}-{Int/Ext}-{finisaj}, dar seteaza OBLIGATORIU "incert": true cu observatia "verifica dimensiune exacta CD-4 fata de baza de coduri reale Priority" — segmentul de miez nu poate fi dedus cu certitudine doar din dimensiunea aproximativa data de client, iar verificarea finala se face fata de baza de coduri reale incarcata in aplicatie.
 
-COD DE COMANDA — structura oficiala (din fisa tehnica), campurile se leaga cu "-":
-  Model:      CD-4
-  Dimensiuni: eticheta exacta din tabelul de mai sus, ex "225/595" sau "300/445"
-  Accesorii pe codul principal (optionale, doar daca sunt cerute explicit): F-R = filtru de aer G4. NU oferta NICIODATA plenum/adaptor AIZ sau AN, sub nicio forma, nici macar daca clientul il cere explicit pe nume — plenumurile nu se mai ofertaza deloc prin aceasta aplicatie.
-  Finisaj:    RAL9016 (standard, implicit) sau alt cod RAL daca clientul cere alta culoare
+Accesorii pe codul principal (optionale, doar daca sunt cerute explicit): F-R = filtru de aer G4. NU oferta NICIODATA plenum/adaptor AIZ sau AN, sub nicio forma, nici macar daca clientul il cere explicit pe nume — plenumurile nu se mai ofertaza deloc prin aceasta aplicatie.
 
-  Registrul de reglaj (OBD), daca e necesar, NU se adauga ca sufix pe codul CD-4 — se oferteaza ca LINIE SEPARATA, cu cod propriu "OBD-{aceeasi dimensiune Int/Ext}", cantitate identica cu a anemostatului.
+Registrul de reglaj (OBD), daca e necesar, NU se adauga ca sufix pe codul CD-4 — se oferteaza ca LINIE SEPARATA, cu cod propriu "OBD-{aceeasi dimensiune Int/Ext}", cantitate identica cu a anemostatului.
 
-Exemplu complet (fara OBD): CD-4-300/445-RAL9016
+Exemplu complet (fara OBD, caz implicit casetat): CD4-145-445/595-RJ16
 Exemplu cu registru de reglaj cerut — DOUA linii separate:
-  Linia 1: CD-4-225/595-RAL9016
-  Linia 2: OBD-225/595
+  Linia 1: CD4-145-445/595-RJ16
+  Linia 2: OBD-445/595
 
-IMPORTANT: pentru CD-4, foloseste EXCLUSIV aceasta schema oficiala de mai sus (nu formatul vechi "CD4-xxx-xxx/xxx-RJxx" intalnit eventual in alte surse — fisa tehnica e sursa corecta si completa).
-
-INTERZIS: nu genera NICIODATA coduri in formatul vechi de tipul "CD4-140-595/735ELOX" (fara cratima dupa CD, trei segmente cu "/", sufix ELOX lipit) — acest format e complet invalid, nu doar depasit ca stil. In particular, "735" ca a doua cota (exterior) e imposibil — cota maxima CD-4 e 595, vezi mai sus. Orice cod CD-4 trebuie sa respecte STRICT structura "CD-4-{Int/Ext din tabel}-{finisaj}" descrisa mai sus.
+INTERZIS: nu genera NICIODATA coduri cu exteriorul peste 595 (ex. formatul vechi/gresit "CD4-140-595/735ELOX" — "735" e imposibil) si nu lipi sufixul de finisaj fara cratima inainte (ex "735ELOX" gresit, "-RJ16" corect).
 `.trim();
 
 const SL_CODE_CORRECTION = `
