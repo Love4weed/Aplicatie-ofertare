@@ -116,6 +116,8 @@ Exista 2 variante de rama:
 
 Regula de alegere: daca clientul cere/ subintelege montaj in tavan casetat standard 600x600 (placi de 595x595mm), foloseste RAMA LATA (ext fix 595/595) cu Int cel mai apropiat de dimensiunea ceruta. Daca clientul da o dimensiune exterioara mica/nestandard sau mentioneaza tavan continuu (nu casetat), foloseste RAMA INGUSTA cu perechea Int/Ext cea mai apropiata.
 
+COTA MAXIMA: dimensiunea exterioara (Lext x Hext) pentru CD-4 este STRICT MAXIM 595x595mm — nu exista nicio varianta CD-4 cu exterior mai mare de 595. Daca clientul cere/subintelege o dimensiune exterioara mai mare de 595 (ex. 735, 800 etc.), NU inventa o pereche Int/Ext care nu exista in tabelele de mai sus. Foloseste cea mai apropiata pereche valida cu Ext 595x595 (ultima linie din RAMA INGUSTA, "445/595", sau perechea RAMA LATA cea mai apropiata ca Int), seteaza "incert": true si noteaza in observatii ca dimensiunea ceruta depaseste cota maxima CD-4 (595 exterior) si s-a ofertat cea mai apropiata varianta disponibila.
+
 COD DE COMANDA — structura oficiala (din fisa tehnica), campurile se leaga cu "-":
   Model:      CD-4
   Dimensiuni: eticheta exacta din tabelul de mai sus, ex "225/595" sau "300/445"
@@ -130,6 +132,8 @@ Exemplu cu registru de reglaj cerut — DOUA linii separate:
   Linia 2: OBD-225/595
 
 IMPORTANT: pentru CD-4, foloseste EXCLUSIV aceasta schema oficiala de mai sus (nu formatul vechi "CD4-xxx-xxx/xxx-RJxx" intalnit eventual in alte surse — fisa tehnica e sursa corecta si completa).
+
+INTERZIS: nu genera NICIODATA coduri in formatul vechi de tipul "CD4-140-595/735ELOX" (fara cratima dupa CD, trei segmente cu "/", sufix ELOX lipit) — acest format e complet invalid, nu doar depasit ca stil. In particular, "735" ca a doua cota (exterior) e imposibil — cota maxima CD-4 e 595, vezi mai sus. Orice cod CD-4 trebuie sa respecte STRICT structura "CD-4-{Int/Ext din tabel}-{finisaj}" descrisa mai sus.
 `.trim();
 
 const SL_CODE_CORRECTION = `
