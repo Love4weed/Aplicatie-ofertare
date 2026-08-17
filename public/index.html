@@ -729,7 +729,16 @@ function verifyAgainstDb(produse) {
       if (cNoSep === codNoSep) { best = c; bestDist = 0; break; }
       let dist;
       if (c.nums.length === targetNums.length && c.nums.length > 0) {
-        dist = c.nums.reduce((sum, n, i) => sum + Math.abs(n - targetNums[i]), 0);
+        const diffs = c.nums.map((n, i) => Math.abs(n - targetNums[i]));
+        const maxDiff = Math.max(...diffs);
+        // Daca vreo pozitie individuala difera mult (ex. un cod de culoare RAL comparat
+        // din greseala cu o alta cifra din cod), nu e o potrivire reala de dimensiune -
+        // respingem candidatul in loc sa-l acceptam pe baza sumei totale.
+        if (maxDiff > 300) {
+          dist = 1e9 + maxDiff;
+        } else {
+          dist = diffs.reduce((sum, d) => sum + d, 0);
+        }
       } else {
         dist = 1e9 + Math.abs(c.nums.length - targetNums.length) * 1e6;
       }
