@@ -57,8 +57,8 @@ DD-T | Grila dubla deflexie pentru desfumare (rezistenta la temperatura). | Cod:
 SD-T | Grila aspiratie pentru desfumare. | Cod: Model SD-T - similar cu SD, Dimensiuni (la cerere) - certificare desfumare
 WPL-T | Grila exterior pentru desfumare. | Cod: Model WPL-T - similar cu WPL, Dimensiuni (la cerere) - certificare desfumare
 WPL-S-T | Grila exterior cu plasa, pentru desfumare, otel galvanizat. | Cod: Model WPL-S-T - Dimensiuni (la cerere) - Finisaj otel galvanizat/RAL
-TF-N | Tubulatura flexibila neizolata. | Cod: Model TF-N - Diametru (la cerere)
-TF-IZ | Tubulatura flexibila izolata. | Cod: Model TF-IZ - Diametru (la cerere)
+TUB-NZ | Tubulatura flexibila neizolata. | Cod: Model TUB-NZ - Diametru (la cerere)
+TUB-IZ | Tubulatura flexibila izolata. | Cod: Model TUB-IZ - Diametru (la cerere)
 FL | Material filtrant lavabil. | Cod: Model FL - Dimensiuni (la cerere)
 FL-R | Filtru lavabil cu rama. | Cod: Model FL-R - Dimensiuni (la cerere)
 LB | Grila decorativa liniara, un rand de lamele fixe, aluminiu. | Cod: Model LB - Dimensiuni (la cerere) - Finisaj RAL9016/alt RAL/EL
