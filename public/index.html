@@ -826,7 +826,7 @@ function splitIntoBatches(text, maxChars) {
   return batches;
 }
 
-async function identifyBatch(batchText) {
+async function identifyBatch(batchText, attempt = 1) {
   const response = await apiFetch('/api/identify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -834,6 +834,10 @@ async function identifyBatch(batchText) {
   });
 
   if (!response.ok) {
+    // Erori tranzitorii (timeout/supraincarcare) - o reincercare automata inainte de a renunta.
+    if ((response.status === 504 || response.status === 502 || response.status === 429) && attempt < 2) {
+      return identifyBatch(batchText, attempt + 1);
+    }
     const err = await response.json().catch(() => ({}));
     throw new Error(err.error || `Eroare API (status ${response.status})`);
   }

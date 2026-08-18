@@ -33,6 +33,10 @@ module.exports = async (req, res) => {
     const msg = await anthropic.messages.create({
       model: 'claude-sonnet-5',
       max_tokens: 8192,
+      // Sarcina e extragere/formatare structurata dupa reguli deja date, nu rationament liber -
+      // dezactivam "thinking" si punem effort mediu ca sa reducem latenta (risc de timeout Vercel).
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'medium' },
       // System prompt-ul (catalog + reguli) e static si mare - il cachem ca sa nu-l platim
       // integral la fiecare apel (doar ~10% din pret la reutilizare in fereastra de 5 min).
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
