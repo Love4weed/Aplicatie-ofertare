@@ -186,9 +186,12 @@ ALEGEREA MODELULUI (WPL vs WPL-S) cand clientul cere plasa contra pasarilor/inse
 
 SUFIXUL "-T" PENTRU MATERIAL OTEL/TABLA (otel zincat), aplicabil intregii familii WPL (WPL, WPL-S):
   Materialul implicit al grilei WPL/WPL-S este ALUMINIU — cand se foloseste aluminiu, codul NU primeste niciun sufix suplimentar.
-  Daca clientul specifica explicit ca grila trebuie sa fie din otel/tabla/otel zincat (in loc de aluminiu), SAU daca cere o grila pentru desfumare (produsele de desfumare din aceasta familie sunt intotdeauna din otel galvanizat certificat), adauga sufixul "-T" ca ULTIMUL element al codului, dupa dimensiuni (si dupa orice sufix de finisaj, daca exista).
-  Exemple: grila WPL peste 800x800, ceruta explicit din otel zincat -> cod "WPL-{DIMxDIM}-T". Grila WPL-S in limita 800x800, pentru desfumare -> cod "WPL-S-{DIMxDIM}-T" (coincide cu modelul WPL-S-T deja definit in catalog, pentru ca desfumarea implica automat otel).
-  Daca materialul nu e specificat de client, presupune aluminiu si NU adauga "-T".
+  Adauga sufixul "-T" DOAR daca e adevarat CEL PUTIN UNUL din urmatoarele DOUA cazuri EXPLICITE:
+    (a) clientul scrie explicit un cuvant care indica alt material decat aluminiu: "otel", "tabla", "otel zincat", "zincat" — sau
+    (b) clientul cere explicit "desfumare" / grila certificata pentru desfumare.
+  NU adauga "-T" pentru NICIUN alt motiv sau indiciu indirect — in particular, urmatoarele NU sunt semnale de material otel si NU justifica "-T": "jaluzele fixe", "plasa de sarma"/"plasa contra pasarilor/insectelor", "cu rama", "grila de evacuare/aspiratie/refulare" fara alte precizari, sau orice alta descriere constructiva. Daca clientul scrie explicit "aluminiu", foloseste STRICT aluminiu (fara -T) — nu specula si nu marca "incert" pe motiv de material, indiferent de alte cuvinte din descriere.
+  Daca materialul nu e mentionat deloc de client, presupune aluminiu si NU adauga "-T" (fara sa marchezi "incert" pentru asta).
+  Exemple: grila WPL peste 800x800, ceruta explicit din otel zincat -> cod "WPL-{DIMxDIM}-T". Grila WPL-S in limita 800x800, pentru desfumare -> cod "WPL-S-{DIMxDIM}-T" (coincide cu modelul WPL-S-T deja definit in catalog, pentru ca desfumarea implica automat otel). Grila WPL-S ceruta explicit "din aluminiu", chiar daca are jaluzele fixe si plasa de sarma -> cod "WPL-S-{DIMxDIM}" FARA -T, fara incert.
 `.trim();
 
 const SYSTEM_PROMPT = `Esti un asistent specializat in identificarea produselor dintr-un catalog tehnic de ventilatie (ACP - Air Conditioning Products) si in generarea codului de articol exact asa cum e folosit in Priority (ERP-ul companiei).
